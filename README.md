@@ -23,18 +23,18 @@ A high-performance custom addon for **Nuvio** and **Stremio** (Android TV, Fire 
 ## 📺 How to Install on TV (Nuvio & Stremio)
 
 ### Option A: Local Network (Addon running on your Arch Machine)
-Your machine's current local IP is `10.71.39.109`.
+Your machine's current local IP is `192.168.31.13`.
 
 1. **In Nuvio (Android TV / Fire TV):**
    - Open **Nuvio**.
    - Go to **Settings** &rarr; **Content & Discovery** &rarr; **Add-ons**.
-   - Enter your Addon URL: `http://10.71.39.109:7000/manifest.json`
+   - Enter your Addon URL: `http://192.168.31.13:7000/manifest.json`
    - Click **Install / Add**.
 
 2. **In Stremio (Android TV / Fire TV / Web / PC):**
    - Open **Stremio**.
    - Go to **Addons** &rarr; **Community Addons**.
-   - Paste `http://10.71.39.109:7000/manifest.json` in the search/addon bar and click **Install**.
+   - Paste `http://192.168.31.13:7000/manifest.json` in the search/addon bar and click **Install**.
 
 ---
 
