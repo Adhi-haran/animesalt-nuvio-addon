@@ -3,8 +3,37 @@ const { loadCatalog } = require('./catalog');
 function getMeta(baseUrl, type, id) {
   const base = baseUrl.replace(/\/+$/, '');
   const catalogData = loadCatalog();
-  const seriesList = catalogData.series || [];
 
+  // 1. Movie Metadata
+  if (type === 'movie' || id.startsWith('animesalt:movie:')) {
+    const moviesList = catalogData.movies || [];
+    const found = moviesList.find(m => m.id === id);
+    if (!found) {
+      return { meta: null };
+    }
+
+    const posterUrl = found.poster && found.poster.startsWith('http') ? found.poster : `${base}${found.poster || '/assets/shinchan_poster.jpg'}`;
+    const bgUrl = found.background && found.background.startsWith('http') ? found.background : `${base}${found.background || '/assets/shinchan_backdrop.svg'}`;
+
+    return {
+      meta: {
+        id: found.id,
+        type: 'movie',
+        name: found.name,
+        description: found.description,
+        genres: found.genres || ["Animation", "Movie", "Tamil Dub"],
+        poster: posterUrl,
+        background: bgUrl,
+        releaseInfo: "Tamil Dub (Multi-Audio)",
+        behaviorHints: {
+          defaultVideoId: found.id
+        }
+      }
+    };
+  }
+
+  // 2. Series Metadata (Default)
+  const seriesList = catalogData.series || [];
   const found = seriesList.find(s => s.id === id);
   if (!found) {
     return { meta: null };

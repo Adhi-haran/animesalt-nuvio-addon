@@ -86,14 +86,17 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 // 5. Health Check & Diagnostics
 app.get('/health', (req, res) => {
   const catalogData = loadCatalog();
-  const counts = (catalogData.series || []).map(s => ({
+  const seriesCounts = (catalogData.series || []).map(s => ({
     name: s.name,
     episodes: (s.videos || []).length
   }));
+  const movieCount = (catalogData.movies || []).length;
   res.json({
     status: 'ok',
     uptime: process.uptime(),
-    indexedSeries: counts
+    indexedSeries: seriesCounts,
+    indexedMovies: movieCount,
+    lastGenerated: catalogData.generatedAt || 'unknown'
   });
 });
 
@@ -101,7 +104,11 @@ app.get('/health', (req, res) => {
 app.get('/api/refresh-catalog', async (req, res) => {
   try {
     const data = await runIndexer();
-    res.json({ status: 'success', seriesCount: (data.series || []).length });
+    res.json({ 
+      status: 'success', 
+      seriesCount: (data.series || []).length,
+      moviesCount: (data.movies || []).length
+    });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
@@ -112,6 +119,7 @@ app.get('/', (req, res) => {
   const baseUrl = getBaseUrl(req);
   const catalogData = loadCatalog();
   const seriesList = catalogData.series || [];
+  const moviesList = catalogData.movies || [];
 
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -130,6 +138,7 @@ app.get('/', (req, res) => {
     p.lead { font-size: 1.15rem; color: #9ca3af; margin-bottom: 1.5rem; }
     .btn { display: inline-block; background: linear-gradient(135deg, #9333ea, #7c3aed); color: white; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4); transition: transform 0.2s; }
     .btn:hover { transform: translateY(-2px); }
+    .section-title { font-size: 1.5rem; color: #fff; margin: 2rem 0 1rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
     .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
     .card { background: var(--card); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; }
     .card h3 { color: var(--cyan); margin-bottom: 0.5rem; font-size: 1.2rem; }
@@ -144,11 +153,12 @@ app.get('/', (req, res) => {
   <div class="container">
     <div class="hero">
       <span class="tag">Nuvio & Stremio Compatible</span>
-      <h1>AnimeSalt Tamil Dubs</h1>
-      <p class="lead">Crayon Shinchan & Doraemon with Hungama TV order, Multi-Audio (Tamil / Telugu / Hindi) & Full HD streaming.</p>
-      <a class="btn" href="stremio://${baseUrl.replace(/^https?:\/\//, '')}/manifest.json">Install to Stremio / Nuvio</a>
+      <h1>AnimeSalt Tamil Anime</h1>
+      <p class="lead">Crayon Shinchan & Doraemon (Series + Movies) with Hungama TV order, Multi-Audio (Tamil / Telugu / Hindi) & Full HD streaming.</p>
+      <a class="btn" href="stremio://${baseUrl.replace(/^https?:\/\//, '')}/manifest.json">Install Addon on TV / App</a>
     </div>
 
+    <h2 class="section-title">📺 TV Series Catalogs</h2>
     <div class="card-grid">
       ${seriesList.map(s => `
         <div class="card">
@@ -159,17 +169,24 @@ app.get('/', (req, res) => {
       `).join('')}
     </div>
 
+    <h2 class="section-title">🎬 Theatrical Movies Catalog</h2>
     <div class="card">
-      <h3>Installation on Android TV (Nuvio / Stremio)</h3>
+      <h3>Tamil Theatrical Anime Movies</h3>
+      <div class="stat">${moviesList.length} Movies Available</div>
+      <p style="color: #9ca3af; font-size: 0.95rem; margin-bottom: 1rem;">Includes all 14 Shinchan movies and 30 Doraemon theatrical movies in Tamil / Multi-Audio.</p>
+    </div>
+
+    <h2 class="section-title">⚙️ Android TV & Nuvio Installation Guide</h2>
+    <div class="card">
       <ol>
         <li>Open <strong>Nuvio</strong> or <strong>Stremio</strong> on your Android TV / Fire TV or PC.</li>
-        <li>Go to <strong>Settings &rarr; Content & Discovery &rarr; Add-ons</strong> (or <strong>Addons &rarr; Community</strong> in Stremio).</li>
+        <li>Navigate to <strong>Settings &rarr; Content & Discovery &rarr; Add-ons</strong> (or <strong>Addons &rarr; Community</strong> in Stremio).</li>
         <li>Paste your Addon Manifest URL:
           <div class="install-box">
             <code>${baseUrl}/manifest.json</code>
           </div>
         </li>
-        <li>Click <strong>Install / Add</strong>. Enjoy all episodes in Tamil on your TV!</li>
+        <li>Click <strong>Install / Add</strong>. Enjoy all episodes & movies in Tamil!</li>
       </ol>
     </div>
   </div>
@@ -177,11 +194,25 @@ app.get('/', (req, res) => {
 </html>`);
 });
 
+// Periodic Background Auto-Updater (every 6 hours)
+const AUTO_SYNC_INTERVAL = 1000 * 60 * 60 * 6; // 6 hours
+setInterval(async () => {
+  console.log('[AutoSync] Running periodic background catalog index refresh...');
+  try {
+    await runIndexer();
+    console.log('[AutoSync] Background catalog update completed successfully.');
+  } catch (e) {
+    console.error('[AutoSync] Background update failed:', e.message);
+  }
+}, AUTO_SYNC_INTERVAL);
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`\n======================================================`);
-  console.log(`🚀 AnimeSalt Tamil Addon Server running on port ${PORT}`);
+  console.log(`🚀 AnimeSalt Tamil Addon Server v1.1.0 running on port ${PORT}`);
   console.log(`📡 Manifest URL: http://localhost:${PORT}/manifest.json`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
   console.log(`======================================================\n`);
 });
+
+module.exports = app;

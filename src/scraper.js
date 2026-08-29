@@ -1,11 +1,9 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const fs = require('fs');
-const path = require('path');
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-// In-memory stream cache to avoid re-scraping the same episode
+// In-memory stream cache to avoid re-scraping the same episode / movie
 const streamCache = new Map();
 const STREAM_CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
 
@@ -80,10 +78,75 @@ async function scrapeSeries(seriesKey, title, url, posterPath, backdropPath, des
 }
 
 /**
- * Resolves stream sources for a given episode slug
+ * Scrapes movies list from animesalt.ro search
+ */
+async function scrapeMovieList(searchTerm, categoryName, fallbackPoster) {
+  try {
+    const url = `https://animesalt.ro/?s=${encodeURIComponent(searchTerm)}`;
+    const res = await axios.get(url, {
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 10000
+    });
+    const html = res.data;
+    const articles = html.match(/<article[^>]*>[\s\S]*?<\/article>/g) || [];
+    const movies = [];
+    const seen = new Set();
+
+    for (const a of articles) {
+      const linkM = a.match(/href=["'](https:\/\/animesalt\.ro\/anime\/([^'"\/]+)\/?)["']/);
+      const titleM = a.match(/title=["']([^'"]+)["']/);
+      const imgM = a.match(/<img[^>]+src=["']([^'"]+)["']/);
+
+      if (linkM && titleM) {
+        const animeUrl = linkM[1];
+        const slug = linkM[2];
+        if (seen.has(slug)) continue;
+
+        // Filter out series entries
+        if (slug.includes('season') && !slug.includes('movie')) continue;
+        if (slug === 'shinchan-vitello-dub' || slug === 'doraemon-1979') continue;
+
+        seen.add(slug);
+        const rawTitle = titleM[1];
+        const cleanTitle = rawTitle
+          .replace(/Anime\s+Hindi\s+Dubbed.*/i, '')
+          .replace(/– Watch Online/i, '')
+          .replace(/&#8217;/g, "'")
+          .replace(/&#8211;/g, "-")
+          .replace(/\| Anime Salt/i, '')
+          .trim();
+
+        const poster = (imgM && imgM[1]) ? imgM[1] : fallbackPoster;
+
+        movies.push({
+          id: `animesalt:movie:${slug}`,
+          slug: slug,
+          title: cleanTitle,
+          name: cleanTitle,
+          type: "movie",
+          category: categoryName,
+          animeUrl: animeUrl,
+          watchUrl: `https://animesalt.ro/${slug}/`,
+          poster: poster,
+          background: fallbackPoster,
+          genres: ["Animation", "Kids", "Comedy", "Movie", "Tamil Dub"],
+          description: `Watch ${cleanTitle} in Tamil / Multi-Audio Dubbed Full HD on AnimeSalt.`
+        });
+      }
+    }
+    return movies;
+  } catch (err) {
+    console.error(`[Scraper] Failed to scrape movies for ${categoryName}:`, err.message);
+    return [];
+  }
+}
+
+/**
+ * Resolves stream sources for a given series episode slug
  */
 async function resolveStreamBySlug(slug) {
-  const cached = streamCache.get(slug);
+  const cacheKey = `ep:${slug}`;
+  const cached = streamCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < STREAM_CACHE_TTL) {
     return cached.data;
   }
@@ -102,7 +165,7 @@ async function resolveStreamBySlug(slug) {
     if (idMatch) {
       const videoId = idMatch[1];
       const streamData = buildStreamPayload(slug, videoId);
-      streamCache.set(slug, { data: streamData, timestamp: Date.now() });
+      streamCache.set(cacheKey, { data: streamData, timestamp: Date.now() });
       return streamData;
     }
   } catch (primaryErr) {
@@ -122,11 +185,78 @@ async function resolveStreamBySlug(slug) {
     if (idMatch) {
       const videoId = idMatch[1];
       const streamData = buildStreamPayload(slug, videoId);
-      streamCache.set(slug, { data: streamData, timestamp: Date.now() });
+      streamCache.set(cacheKey, { data: streamData, timestamp: Date.now() });
       return streamData;
     }
   } catch (fallbackErr) {
     console.error(`[StreamResolver] Fallback source also failed for ${slug}:`, fallbackErr.message);
+  }
+
+  return null;
+}
+
+/**
+ * Resolves stream sources for a movie slug
+ */
+async function resolveMovieStream(slug) {
+  const cacheKey = `movie:${slug}`;
+  const cached = streamCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < STREAM_CACHE_TTL) {
+    return cached.data;
+  }
+
+  try {
+    const watchUrl = `https://animesalt.ro/${slug}/`;
+    const res = await axios.get(watchUrl, {
+      headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalt.ro/' },
+      timeout: 8000
+    });
+    const $ = cheerio.load(res.data);
+    const iframeSrc = $('iframe').attr('src') || '';
+
+    if (iframeSrc) {
+      const streams = [];
+
+      // If Megaplay embed
+      if (iframeSrc.includes('megaplay.su')) {
+        try {
+          const megaRes = await axios.get(iframeSrc, {
+            headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalt.ro/' },
+            timeout: 5000
+          });
+          const hlsMatch = megaRes.data.match(/https?:\/\/[^\s"'\x27]+\.m3u8[^\s"'\x27]*/);
+          if (hlsMatch) {
+            streams.push({
+              name: "AnimeSalt Movie [Fast HLS]",
+              title: `${slug.toUpperCase()}\n🔊 Multi-Audio Stream\n⚡ Adaptive Full HD`,
+              url: hlsMatch[0],
+              behaviorHints: {
+                notWebReady: false,
+                headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://vid.megaplay.su/' }
+              }
+            });
+          }
+        } catch (e) {
+          // fallback to embed
+        }
+      }
+
+      // Add direct embed stream
+      streams.push({
+        name: "AnimeSalt Movie [Direct Server]",
+        title: `${slug.toUpperCase()} (Direct Stream)`,
+        url: iframeSrc,
+        behaviorHints: {
+          notWebReady: false,
+          headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalt.ro/' }
+        }
+      });
+
+      streamCache.set(cacheKey, { data: streams, timestamp: Date.now() });
+      return streams;
+    }
+  } catch (err) {
+    console.error(`[MovieResolver] Failed to resolve movie ${slug}:`, err.message);
   }
 
   return null;
@@ -169,5 +299,7 @@ function buildStreamPayload(slug, videoId) {
 
 module.exports = {
   scrapeSeries,
-  resolveStreamBySlug
+  scrapeMovieList,
+  resolveStreamBySlug,
+  resolveMovieStream
 };

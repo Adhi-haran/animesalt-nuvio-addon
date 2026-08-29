@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { scrapeSeries } = require('./scraper');
+const { scrapeSeries, scrapeMovieList } = require('./scraper');
 
 const DATA_FILE = path.join(__dirname, 'data', 'catalog.json');
 
@@ -32,11 +32,12 @@ const SERIES_CONFIGS = [
 ];
 
 async function runIndexer() {
-  console.log('[Indexer] Starting catalog index generation...');
+  console.log('[Indexer] Starting full catalog index generation (Series + Movies)...');
   const seriesList = [];
 
+  // 1. Index Series
   for (const config of SERIES_CONFIGS) {
-    console.log(`[Indexer] Indexing: ${config.title}...`);
+    console.log(`[Indexer] Indexing Series: ${config.title}...`);
     const data = await scrapeSeries(
       config.key,
       config.title,
@@ -51,14 +52,26 @@ async function runIndexer() {
     }
   }
 
+  // 2. Index Movies
+  console.log('[Indexer] Indexing Shinchan Movies...');
+  const shinchanMovies = await scrapeMovieList('shinchan+movie', 'Shinchan Movies', '/assets/shinchan_poster.jpg');
+  console.log(`[Indexer] Found ${shinchanMovies.length} Shinchan Movies`);
+
+  console.log('[Indexer] Indexing Doraemon Movies...');
+  const doraemonMovies = await scrapeMovieList('doraemon', 'Doraemon Movies', '/assets/doraemon_1979_poster.jpg');
+  console.log(`[Indexer] Found ${doraemonMovies.length} Doraemon Movies`);
+
+  const allMovies = [...shinchanMovies, ...doraemonMovies];
+
   const payload = {
     generatedAt: new Date().toISOString(),
-    series: seriesList
+    series: seriesList,
+    movies: allMovies
   };
 
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
   fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf-8');
-  console.log(`[Indexer] Catalog successfully written to ${DATA_FILE}`);
+  console.log(`[Indexer] Catalog successfully saved! (${seriesList.length} series, ${allMovies.length} movies)`);
   return payload;
 }
 

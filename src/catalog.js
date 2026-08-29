@@ -12,15 +12,57 @@ function loadCatalog() {
   } catch (err) {
     console.error('[Catalog] Error reading catalog.json:', err.message);
   }
-  return { series: [] };
+  return { series: [], movies: [] };
 }
 
 function getCatalog(baseUrl, type, id, extra = {}) {
   const base = baseUrl.replace(/\/+$/, '');
   const catalogData = loadCatalog();
+
+  // 1. Movies Catalog
+  if (type === 'movie' || id === 'animesalt_tamil_movies') {
+    let moviesList = catalogData.movies || [];
+
+    if (extra.search) {
+      const q = extra.search.toLowerCase().trim();
+      moviesList = moviesList.filter(m => 
+        m.name.toLowerCase().includes(q) ||
+        m.description.toLowerCase().includes(q) ||
+        m.slug.toLowerCase().includes(q)
+      );
+    }
+
+    if (extra.genre && extra.genre !== 'All') {
+      const g = extra.genre.toLowerCase();
+      moviesList = moviesList.filter(m => 
+        m.category.toLowerCase().includes(g) || 
+        m.name.toLowerCase().includes(g)
+      );
+    }
+
+    const metas = moviesList.map(m => {
+      const posterUrl = m.poster && m.poster.startsWith('http') ? m.poster : `${base}${m.poster || '/assets/shinchan_poster.jpg'}`;
+      const bgUrl = m.background && m.background.startsWith('http') ? m.background : `${base}${m.background || '/assets/shinchan_backdrop.svg'}`;
+      
+      return {
+        id: m.id,
+        type: 'movie',
+        name: m.name,
+        poster: posterUrl,
+        background: bgUrl,
+        description: m.description,
+        genres: m.genres || ["Animation", "Movie", "Tamil Dub"],
+        releaseInfo: "Tamil Dub",
+        posterShape: "poster"
+      };
+    });
+
+    return { metas };
+  }
+
+  // 2. Series Catalog (Default)
   let seriesList = catalogData.series || [];
 
-  // Filter by search query if present
   if (extra.search) {
     const q = extra.search.toLowerCase().trim();
     seriesList = seriesList.filter(s => 
@@ -30,7 +72,6 @@ function getCatalog(baseUrl, type, id, extra = {}) {
     );
   }
 
-  // Filter by genre if selected
   if (extra.genre && extra.genre !== 'All') {
     const g = extra.genre.toLowerCase();
     seriesList = seriesList.filter(s => s.name.toLowerCase().includes(g));

@@ -1,5 +1,5 @@
 const { loadCatalog } = require('./catalog');
-const { resolveStreamBySlug } = require('./scraper');
+const { resolveStreamBySlug, resolveMovieStream } = require('./scraper');
 
 async function getStream(type, id) {
   // Check if ID matches our prefix
@@ -7,6 +7,18 @@ async function getStream(type, id) {
     return { streams: [] };
   }
 
+  // 1. Movie Stream Resolution
+  if (type === 'movie' || id.startsWith('animesalt:movie:')) {
+    const slug = id.replace('animesalt:movie:', '');
+    console.log(`[StreamHandler] Resolving Movie stream for Slug: ${slug}`);
+    const streams = await resolveMovieStream(slug);
+    if (streams && streams.length > 0) {
+      return { streams };
+    }
+    return { streams: [] };
+  }
+
+  // 2. Series Episode Stream Resolution
   const parts = id.split(':');
   // Format: animesalt:<seriesKey>:<season>:<episode>
   let slug = null;
@@ -47,7 +59,7 @@ async function getStream(type, id) {
     return { streams: [] };
   }
 
-  console.log(`[StreamHandler] Resolving stream for ID: ${id} (Slug: ${slug})`);
+  console.log(`[StreamHandler] Resolving Series stream for ID: ${id} (Slug: ${slug})`);
   const streams = await resolveStreamBySlug(slug);
 
   if (streams && streams.length > 0) {
