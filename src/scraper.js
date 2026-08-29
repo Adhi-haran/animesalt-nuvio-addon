@@ -1,20 +1,24 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const config = require('./config');
 
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const USER_AGENT = config.USER_AGENT;
+const PRIMARY_DOMAIN = config.PRIMARY_DOMAIN.replace(/\/+$/, '');
+const FALLBACK_DOMAIN = config.FALLBACK_DOMAIN.replace(/\/+$/, '');
 
 // In-memory stream cache to avoid re-scraping the same episode / movie
 const streamCache = new Map();
 const STREAM_CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
 
 /**
- * Scrapes a single series page from animesalttv.to
+ * Scrapes a single series page from primary domain
  */
-async function scrapeSeries(seriesKey, title, url, posterPath, backdropPath, description) {
+async function scrapeSeries(seriesKey, title, relativePath, posterPath, backdropPath, description) {
   try {
+    const url = `${PRIMARY_DOMAIN}${relativePath}`;
     const res = await axios.get(url, {
       headers: { 'User-Agent': USER_AGENT },
-      timeout: 10000
+      timeout: 12000
     });
     const html = res.data;
 
@@ -27,7 +31,7 @@ async function scrapeSeries(seriesKey, title, url, posterPath, backdropPath, des
     }
 
     // Extract episode cards
-    const cardRegex = /<a[^>]+data-episode-season=["'](\d+)["'][^>]+href=["'](https:\/\/animesalttv\.to\/episode\/([^'"\/]+)\/?)["'][^>]*>.*?<h3 class="episode-name">([^<]+)<\/h3>/gs;
+    const cardRegex = /<a[^>]+data-episode-season=["'](\d+)["'][^>]+href=["']([^'"]*\/episode\/([^'"\/]+)\/?)["'][^>]*>.*?<h3 class="episode-name">([^<]+)<\/h3>/gs;
     const episodes = [];
     const seen = new Set();
     let cMatch;
@@ -78,14 +82,14 @@ async function scrapeSeries(seriesKey, title, url, posterPath, backdropPath, des
 }
 
 /**
- * Scrapes movies list from animesalt.ro search
+ * Scrapes movies list from fallback domain search
  */
 async function scrapeMovieList(searchTerm, categoryName, fallbackPoster) {
   try {
-    const url = `https://animesalt.ro/?s=${encodeURIComponent(searchTerm)}`;
+    const url = `${FALLBACK_DOMAIN}/?s=${encodeURIComponent(searchTerm)}`;
     const res = await axios.get(url, {
       headers: { 'User-Agent': USER_AGENT },
-      timeout: 10000
+      timeout: 12000
     });
     const html = res.data;
     const articles = html.match(/<article[^>]*>[\s\S]*?<\/article>/g) || [];
@@ -93,7 +97,7 @@ async function scrapeMovieList(searchTerm, categoryName, fallbackPoster) {
     const seen = new Set();
 
     for (const a of articles) {
-      const linkM = a.match(/href=["'](https:\/\/animesalt\.ro\/anime\/([^'"\/]+)\/?)["']/);
+      const linkM = a.match(/href=["']([^'"]*\/anime\/([^'"\/]+)\/?)["']/);
       const titleM = a.match(/title=["']([^'"]+)["']/);
       const imgM = a.match(/<img[^>]+src=["']([^'"]+)["']/);
 
@@ -126,7 +130,7 @@ async function scrapeMovieList(searchTerm, categoryName, fallbackPoster) {
           type: "movie",
           category: categoryName,
           animeUrl: animeUrl,
-          watchUrl: `https://animesalt.ro/${slug}/`,
+          watchUrl: `${FALLBACK_DOMAIN}/${slug}/`,
           poster: poster,
           background: fallbackPoster,
           genres: ["Animation", "Kids", "Comedy", "Movie", "Tamil Dub"],
@@ -153,9 +157,9 @@ async function resolveStreamBySlug(slug) {
 
   // 1. Try Primary: animesalttv.to
   try {
-    const primaryUrl = `https://animesalttv.to/episode/${slug}/`;
+    const primaryUrl = `${PRIMARY_DOMAIN}/episode/${slug}/`;
     const res = await axios.get(primaryUrl, {
-      headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalttv.to/' },
+      headers: { 'User-Agent': USER_AGENT, 'Referer': `${PRIMARY_DOMAIN}/` },
       timeout: 8000
     });
     const $ = cheerio.load(res.data);
@@ -174,9 +178,9 @@ async function resolveStreamBySlug(slug) {
 
   // 2. Fallback: animesalt.ro
   try {
-    const fallbackUrl = `https://animesalt.ro/${slug}/`;
+    const fallbackUrl = `${FALLBACK_DOMAIN}/${slug}/`;
     const res = await axios.get(fallbackUrl, {
-      headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalt.ro/' },
+      headers: { 'User-Agent': USER_AGENT, 'Referer': `${FALLBACK_DOMAIN}/` },
       timeout: 8000
     });
     const $ = cheerio.load(res.data);
@@ -206,9 +210,9 @@ async function resolveMovieStream(slug) {
   }
 
   try {
-    const watchUrl = `https://animesalt.ro/${slug}/`;
+    const watchUrl = `${FALLBACK_DOMAIN}/${slug}/`;
     const res = await axios.get(watchUrl, {
-      headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalt.ro/' },
+      headers: { 'User-Agent': USER_AGENT, 'Referer': `${FALLBACK_DOMAIN}/` },
       timeout: 8000
     });
     const $ = cheerio.load(res.data);
@@ -221,7 +225,7 @@ async function resolveMovieStream(slug) {
       if (iframeSrc.includes('megaplay.su')) {
         try {
           const megaRes = await axios.get(iframeSrc, {
-            headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalt.ro/' },
+            headers: { 'User-Agent': USER_AGENT, 'Referer': `${FALLBACK_DOMAIN}/` },
             timeout: 5000
           });
           const hlsMatch = megaRes.data.match(/https?:\/\/[^\s"'\x27]+\.m3u8[^\s"'\x27]*/);
@@ -248,7 +252,7 @@ async function resolveMovieStream(slug) {
         url: iframeSrc,
         behaviorHints: {
           notWebReady: false,
-          headers: { 'User-Agent': USER_AGENT, 'Referer': 'https://animesalt.ro/' }
+          headers: { 'User-Agent': USER_AGENT, 'Referer': `${FALLBACK_DOMAIN}/` }
         }
       });
 
@@ -266,7 +270,7 @@ async function resolveMovieStream(slug) {
  * Builds the Stremio / Nuvio stream object payload
  */
 function buildStreamPayload(slug, videoId) {
-  const hlsUrl = `https://animesalttv.to/wp-json/animesalt/v1/zhls?id=${videoId}`;
+  const hlsUrl = `${PRIMARY_DOMAIN}/wp-json/animesalt/v1/zhls?id=${videoId}`;
   const cdnMirrorUrl = `https://as-cdn26.top/video/${videoId}`;
 
   return [
@@ -278,7 +282,7 @@ function buildStreamPayload(slug, videoId) {
         notWebReady: false,
         headers: {
           "User-Agent": USER_AGENT,
-          "Referer": "https://animesalttv.to/"
+          "Referer": `${PRIMARY_DOMAIN}/`
         }
       }
     },
@@ -290,7 +294,7 @@ function buildStreamPayload(slug, videoId) {
         notWebReady: false,
         headers: {
           "User-Agent": USER_AGENT,
-          "Referer": "https://animesalt.ro/"
+          "Referer": `${FALLBACK_DOMAIN}/`
         }
       }
     }
