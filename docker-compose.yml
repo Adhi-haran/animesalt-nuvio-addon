@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  animesalt-addon:
+    build: .
+    container_name: animesalt-tamil-addon
+    restart: unless-stopped
+    ports:
+      - "7000:7000"
+    environment:
+      - PORT=7000
+      - NODE_ENV=production
+      # - BASE_URL=https://your-public-url.com
+    volumes:
+      - ./src/data:/app/src/data

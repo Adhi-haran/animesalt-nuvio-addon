@@ -1,0 +1,16 @@
+[Unit]
+Description=AnimeSalt Tamil Addon (Nuvio & Stremio)
+After=network.target
+
+[Service]
+Type=simple
+User=adhi
+WorkingDirectory=/home/adhi/Projects/animesalt-tamil-addon
+ExecStart=/usr/bin/node /home/adhi/Projects/animesalt-tamil-addon/server.js
+Restart=always
+RestartSec=5
+Environment=PORT=7000
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=default.target

@@ -1,56 +1,97 @@
 # AnimeSalt Tamil Dubs Addon (Shinchan & Doraemon)
 
-A high-performance custom addon for **Nuvio** and **Stremio** (Android TV, Fire TV, Mobile, Desktop, Web) designed to stream **Crayon Shinchan** and **Doraemon** in Tamil (Hungama TV dub order) directly from AnimeSalt (`animesalttv.to` and `animesalt.ro`).
+A high-performance custom addon for **Nuvio** and **Stremio** (Android TV, Fire TV, Mobile, Desktop, Web) designed to stream **Crayon Shinchan** and **Doraemon** in Tamil (Hungama TV dub order) directly from AnimeSalt.
 
 ---
 
-## Features
+## 🌟 Features
 
-- **Custom Hungama TV Dub Order:** Resolves the issue where Tamil dubs cannot be indexed via standard TMDB or Japanese broadcast orders.
-- **Complete Episode Catalogs:**
-  - **Crayon Shinchan (Tamil Dub):** 612 episodes across 12 seasons (Seasons 1–8, 12–15).
-  - **Doraemon Classic 1979 (Tamil Dub):** 311 episodes across 6 seasons (Seasons 1–6).
-  - **Doraemon Modern 2005 (Tamil Dub):** 207 episodes across 8 seasons (Seasons 3–9, 14).
+- **Custom Hungama TV Dub Order:** Solves the metadata mismatch issue where Indian TV dub orders cannot be indexed via TMDB.
+- **Complete Episode & Movie Catalogs:**
+  - **Crayon Shinchan (Tamil Dub):** 612 episodes (Seasons 1–8, 12–15) — *100% continuous, 0 missing episodes*.
+  - **Doraemon Classic 1979 (Tamil Dub):** 311 episodes (Seasons 1–6) — *100% continuous, 0 missing episodes*.
+  - **Doraemon Modern 2005 (Tamil Dub):** 207 episodes (Seasons 3–9, 14).
+  - **14 Shinchan Theatrical Movies in Tamil** (*Action Kamen vs Higure Rakshas*, *The Golden Sword*, *Masala Story*, etc.).
+  - **30 Doraemon Theatrical Movies in Tamil** (*Stand By Me Doraemon 2*, *Nobita's Dinosaur*, *Little Star Wars*, etc.).
 - **Multi-Audio Support:** Adaptive HLS streams with selectable audio tracks (**Tamil**, **Telugu**, **Hindi**).
-- **Custom Poster & Fanart Engine:** High-resolution posters, backdrops, and logos bundled locally to prevent broken images.
-- **Dual-Domain Fallback:** Seamlessly fails over from `animesalttv.to` to `animesalt.ro` if any server is unreachable.
-- **Instant Response Caching:** In-memory caching for lightning-fast TV browsing.
+- **Custom Poster & Fanart Engine:** Bundled local artwork to eliminate broken TMDB images.
+- **Dual-Domain Fallback:** Fails over between `animesalttv.to` and `animesalt.ro`.
+- **Background Auto-Sync:** Refreshes the catalog every 6 hours automatically.
 
 ---
 
-## Quick Start (Local)
+## 📺 How to Install on TV (Nuvio & Stremio)
 
-### 1. Install & Start
+### Option A: Local Network (Addon running on your Arch Machine)
+Your machine's current local IP is `10.71.39.109`.
 
+1. **In Nuvio (Android TV / Fire TV):**
+   - Open **Nuvio**.
+   - Go to **Settings** &rarr; **Content & Discovery** &rarr; **Add-ons**.
+   - Enter your Addon URL: `http://10.71.39.109:7000/manifest.json`
+   - Click **Install / Add**.
+
+2. **In Stremio (Android TV / Fire TV / Web / PC):**
+   - Open **Stremio**.
+   - Go to **Addons** &rarr; **Community Addons**.
+   - Paste `http://10.71.39.109:7000/manifest.json` in the search/addon bar and click **Install**.
+
+---
+
+### Option B: Free 24/7 Cloud Hosting (No PC Required)
+
+If you don't want to keep your PC on:
+
+#### 1. Deploy to Vercel (Free 1-Click Serverless)
+1. Push this repository to your GitHub account (`git push`).
+2. Go to [vercel.com](https://vercel.com) &rarr; **Add New Project** &rarr; Import your repo.
+3. Click **Deploy**.
+4. Your addon will be live at `https://your-project.vercel.app/manifest.json`!
+5. Add that URL into Nuvio or Stremio.
+
+#### 2. Deploy to Render (Free Web Service)
+1. Create a free account on [render.com](https://render.com).
+2. Click **New +** &rarr; **Web Service** &rarr; Connect your GitHub repository.
+3. Set **Build Command:** `npm install` and **Start Command:** `npm start`.
+4. Click **Create Web Service**.
+5. Your addon will be available at `https://your-app.onrender.com/manifest.json`.
+
+---
+
+## 🛠️ Management & CLI Commands
+
+### Manage Local Background Daemon:
 ```bash
-cd /home/adhi/Projects/animesalt-tamil-addon
-npm install
-npm start
+# Check service status
+systemctl --user status animesalt-addon
+
+# Restart service
+systemctl --user restart animesalt-addon
+
+# View live logs
+journalctl --user -u animesalt-addon -f
+
+# Stop service
+systemctl --user stop animesalt-addon
 ```
 
-The addon will be available at: `http://localhost:7000`
+### Docker Deployment:
+```bash
+# Start container
+docker-compose up -d --build
 
-### 2. Available Endpoints
+# Stop container
+docker-compose down
+```
 
-- **Web Dashboard & Installer:** `http://localhost:7000/`
-- **Manifest:** `http://localhost:7000/manifest.json`
-- **Catalog:** `http://localhost:7000/catalog/series/animesalt_tamil_series.json`
-- **Meta (Shinchan):** `http://localhost:7000/meta/series/animesalt:shinchan.json`
-- **Stream (Shinchan S1E1):** `http://localhost:7000/stream/series/animesalt:shinchan:1:1.json`
-- **Health Check:** `http://localhost:7000/health`
-- **Refresh Catalog:** `http://localhost:7000/api/refresh-catalog`
+### Re-index Catalog Manually:
+```bash
+npm run index
+```
 
 ---
 
-## TV Setup Guide (Android TV / Fire TV)
-
-### In Nuvio:
-1. Open **Nuvio** on your TV.
-2. Go to **Settings** &rarr; **Content & Discovery** &rarr; **Add-ons**.
-3. Enter your addon manifest URL: `http://<YOUR-IP>:7000/manifest.json` (or your hosted domain).
-4. Save and return to Home. You will see the **Tamil Dubbed Anime** catalog with Shinchan and Doraemon!
-
-### In Stremio:
-1. Open **Stremio** on your TV or phone.
-2. Go to **Addons** &rarr; **Community Addons** &rarr; search or paste `http://<YOUR-IP>:7000/manifest.json`.
-3. Click **Install**.
+## 🎧 TV Player Audio Setting Tip
+The streams contain **Tamil**, **Telugu**, and **Hindi** audio tracks.
+To have your TV player automatically play the **Tamil dub** every time:
+- In **Nuvio** or **Stremio**: Go to **Settings &rarr; Player &rarr; Preferred Audio Track** and select **Tamil** (`tam` / `ta`).
