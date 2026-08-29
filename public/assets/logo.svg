@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="logobg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9333ea"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#logobg)"/>
+  <circle cx="256" cy="256" r="180" fill="#ffffff" opacity="0.1"/>
+  <path d="M210 160 L360 256 L210 352 Z" fill="#ffffff"/>
+  <text x="256" y="420" font-family="system-ui, sans-serif" font-weight="900" font-size="36" fill="#ffffff" text-anchor="middle" letter-spacing="2">TAMIL ANIME</text>
+</svg>

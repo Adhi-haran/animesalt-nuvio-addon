@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#831843"/><stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#05070b" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#05070b" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#05070b" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <rect width="1920" height="1080" fill="url(#overlay)"/>
+  <circle cx="1500" cy="400" r="300" fill="#f43f5e" opacity="0.15" filter="blur(60px)"/>
+  
+  <text x="120" y="480" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="72" fill="#ffffff" letter-spacing="-1">Crayon Shinchan</text>
+  <rect x="120" y="520" width="180" height="6" fill="#f43f5e" rx="3"/>
+  <text x="120" y="580" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="32" fill="#2ad4b8">Tamil Hungama TV Dub (All Seasons 1–15)</text>
+  <text x="120" y="630" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="24" fill="#a0aec0">Tamil Dubbed • Multi-Audio (Tamil / Telugu / Hindi) • Full HD</text>
+</svg>
