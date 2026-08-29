@@ -5,9 +5,9 @@ function getManifest(baseUrl) {
   const base = baseUrl.replace(/\/+$/, '');
   return {
     id: "community.animesalt.tamil",
-    version: "1.1.0",
-    name: "AnimeSalt Tamil (Shinchan & Doraemon)",
-    description: "Stream Crayon Shinchan & Doraemon (All Episodes & Theatrical Movies) in Tamil with Multi-Audio & Full HD.",
+    version: "1.2.0",
+    name: "Favorite Anime (Shinchan & Doraemon)",
+    description: "Stream Favorite Shinchan & Doraemon episodes and theatrical movies in Tamil with Multi-Audio & Full HD.",
     logo: `${base}/assets/logo.svg`,
     background: `${base}/assets/shinchan_backdrop.svg`,
     types: ["series", "movie", "anime"],
@@ -16,7 +16,7 @@ function getManifest(baseUrl) {
       {
         type: "series",
         id: "animesalt_tamil_series",
-        name: "Tamil Anime Series (AnimeSalt)",
+        name: "Favorite series",
         extra: [
           { name: "search", isRequired: false },
           { 
@@ -29,7 +29,7 @@ function getManifest(baseUrl) {
       {
         type: "movie",
         id: "animesalt_tamil_movies",
-        name: "Tamil Anime Movies (AnimeSalt)",
+        name: "Favorite movies",
         extra: [
           { name: "search", isRequired: false },
           { 

@@ -1,12 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="logobg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#9333ea"/>
-      <stop offset="100%" stop-color="#2563eb"/>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#311042"/>
     </linearGradient>
+
+    <!-- Ring Gradient (Doraemon Cyan to Shinchan Pink/Orange) -->
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <!-- Play Button Gradient -->
+    <linearGradient id="playGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
-  <rect width="512" height="512" rx="128" fill="url(#logobg)"/>
-  <circle cx="256" cy="256" r="180" fill="#ffffff" opacity="0.1"/>
-  <path d="M210 160 L360 256 L210 352 Z" fill="#ffffff"/>
-  <text x="256" y="420" font-family="system-ui, sans-serif" font-weight="900" font-size="36" fill="#ffffff" text-anchor="middle" letter-spacing="2">TAMIL ANIME</text>
+
+  <!-- Base Rounded Rectangle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" stroke="rgba(255,255,255,0.12)" stroke-width="4"/>
+
+  <!-- Outer Glow Ring -->
+  <circle cx="256" cy="220" r="140" fill="none" stroke="url(#glowGrad)" stroke-width="8" filter="url(#glow)" opacity="0.9"/>
+  <circle cx="256" cy="220" r="140" fill="none" stroke="url(#glowGrad)" stroke-width="6"/>
+
+  <!-- Inner Subtle Disc -->
+  <circle cx="256" cy="220" r="110" fill="rgba(255,255,255,0.05)"/>
+
+  <!-- Modern Play Icon Symbol -->
+  <path d="M225 155 L325 220 L225 285 Z" fill="url(#playGrad)" filter="url(#glow)"/>
+  <path d="M225 155 L325 220 L225 285 Z" fill="#ffffff"/>
+
+  <!-- Stars / Bell Accent Dots -->
+  <circle cx="256" cy="95" r="7" fill="#38bdf8"/>
+  <circle cx="365" cy="220" r="6" fill="#f43f5e"/>
+  <circle cx="147" cy="220" r="6" fill="#06b6d4"/>
+
+  <!-- Badge Text -->
+  <text x="256" y="395" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="34" fill="#ffffff" text-anchor="middle" letter-spacing="3">FAVORITES</text>
+  <text x="256" y="435" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="20" fill="#38bdf8" text-anchor="middle" letter-spacing="4">TAMIL DUB</text>
 </svg>

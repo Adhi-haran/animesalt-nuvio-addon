@@ -126,21 +126,23 @@ app.get('/', (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AnimeSalt Tamil (Shinchan & Doraemon) Addon</title>
+  <title>Favorite Anime (Shinchan & Doraemon) Addon</title>
+  <link rel="icon" href="${baseUrl}/assets/logo.svg" type="image/svg+xml">
   <style>
     :root { --bg: #0b0f19; --card: #151d30; --accent: #9333ea; --cyan: #06b6d4; --text: #f3f4f6; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; padding: 2rem; }
     .container { max-width: 960px; margin: 0 auto; }
-    .hero { text-align: center; margin-bottom: 2.5rem; padding: 2rem; background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(6, 182, 212, 0.15)); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .hero { text-align: center; margin-bottom: 2.5rem; padding: 2.5rem 2rem; background: linear-gradient(135deg, rgba(147, 51, 234, 0.18), rgba(6, 182, 212, 0.18)); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.12); }
+    .logo-img { width: 90px; height: 90px; margin-bottom: 1rem; border-radius: 24px; box-shadow: 0 8px 24px rgba(147, 51, 234, 0.35); }
     h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff; }
     .tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; margin-bottom: 1rem; }
     p.lead { font-size: 1.15rem; color: #9ca3af; margin-bottom: 1.5rem; }
-    .btn { display: inline-block; background: linear-gradient(135deg, #9333ea, #7c3aed); color: white; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4); transition: transform 0.2s; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #9333ea, #7c3aed); color: white; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4); transition: transform 0.2s; }
     .btn:hover { transform: translateY(-2px); }
     .section-title { font-size: 1.5rem; color: #fff; margin: 2rem 0 1rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
     .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
-    .card { background: var(--card); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; }
+    .card { background: var(--card); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 1.5rem; }
     .card h3 { color: var(--cyan); margin-bottom: 0.5rem; font-size: 1.2rem; }
     .stat { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0.5rem 0; }
     .install-box { background: #05070e; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 1rem 1.5rem; margin-top: 1rem; }
@@ -152,13 +154,15 @@ app.get('/', (req, res) => {
 <body>
   <div class="container">
     <div class="hero">
+      <img src="${baseUrl}/assets/logo.svg" alt="Addon Logo" class="logo-img">
+      <br>
       <span class="tag">Nuvio & Stremio Compatible</span>
-      <h1>AnimeSalt Tamil Anime</h1>
-      <p class="lead">Crayon Shinchan & Doraemon (Series + Movies) with Hungama TV order, Multi-Audio (Tamil / Telugu / Hindi) & Full HD streaming.</p>
+      <h1>Favorite Anime</h1>
+      <p class="lead">Crayon Shinchan & Doraemon (Favorite Series & Favorite Movies) with Hungama TV order, Multi-Audio (Tamil / Telugu / Hindi) & Full HD streaming.</p>
       <a class="btn" href="stremio://${baseUrl.replace(/^https?:\/\//, '')}/manifest.json">Install Addon on TV / App</a>
     </div>
 
-    <h2 class="section-title">📺 TV Series Catalogs</h2>
+    <h2 class="section-title">📺 Favorite Series</h2>
     <div class="card-grid">
       ${seriesList.map(s => `
         <div class="card">
@@ -169,9 +173,9 @@ app.get('/', (req, res) => {
       `).join('')}
     </div>
 
-    <h2 class="section-title">🎬 Theatrical Movies Catalog</h2>
+    <h2 class="section-title">🎬 Favorite Movies</h2>
     <div class="card">
-      <h3>Tamil Theatrical Anime Movies</h3>
+      <h3>Theatrical Anime Movies</h3>
       <div class="stat">${moviesList.length} Movies Available</div>
       <p style="color: #9ca3af; font-size: 0.95rem; margin-bottom: 1rem;">Includes all 14 Shinchan movies and 30 Doraemon theatrical movies in Tamil / Multi-Audio.</p>
     </div>
@@ -209,7 +213,7 @@ setInterval(async () => {
 // Start Server
 app.listen(PORT, () => {
   console.log(`\n======================================================`);
-  console.log(`🚀 AnimeSalt Tamil Addon Server v1.1.0 running on port ${PORT}`);
+  console.log(`🚀 Favorite Anime Addon Server v1.2.0 running on port ${PORT}`);
   console.log(`📡 Manifest URL: http://localhost:${PORT}/manifest.json`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
   console.log(`======================================================\n`);
